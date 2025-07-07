@@ -13,7 +13,7 @@ import './App.css';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark-theme">
         <Navbar />
         <main className="container mx-auto px-4 py-8">
           <Routes>
@@ -30,9 +30,23 @@ function App() {
           toastOptions={{
             duration: 4000,
             style: {
-              background: '#1f2937',
-              color: '#f9fafb',
-              border: '1px solid #374151',
+              background: 'rgba(30, 41, 59, 0.95)',
+              color: '#f8fafc',
+              border: '1px solid rgba(51, 65, 85, 0.5)',
+              backdropFilter: 'blur(8px)',
+              fontFamily: 'Inter, sans-serif',
+            },
+            success: {
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#f8fafc',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#f8fafc',
+              },
             },
           }}
         />
