@@ -12,10 +12,12 @@ import {
   Maximize2,
   Minimize2
 } from 'lucide-react';
+import { useUIState, useSystemData } from '../lib/store';
 
 const Header: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const { theme, setTheme, notifications } = useUIState();
+  const { user } = useSystemData();
   
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -26,6 +28,8 @@ const Header: React.FC = () => {
       setIsFullscreen(false);
     }
   };
+
+  const unreadNotifications = notifications.filter(n => !n.read).length;
 
   return (
     <header className="h-14 bg-[#111111] border-b border-[#333333] flex items-center justify-between px-6">
@@ -57,11 +61,11 @@ const Header: React.FC = () => {
         {/* Quick Actions */}
         <div className="flex items-center space-x-1">
           <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className="p-2 hover:bg-[#222222] rounded-lg transition-colors"
             title="Toggle theme"
           >
-            {isDarkMode ? (
+            {theme === 'dark' ? (
               <Sun className="w-4 h-4 text-gray-400 hover:text-white" />
             ) : (
               <Moon className="w-4 h-4 text-gray-400 hover:text-white" />
@@ -80,7 +84,10 @@ const Header: React.FC = () => {
             )}
           </button>
 
-          <button className="p-2 hover:bg-[#222222] rounded-lg transition-colors" title="Help">
+          <button 
+            className="p-2 hover:bg-[#222222] rounded-lg transition-colors" 
+            title="Help & Documentation"
+          >
             <HelpCircle className="w-4 h-4 text-gray-400 hover:text-white" />
           </button>
         </div>
@@ -91,9 +98,11 @@ const Header: React.FC = () => {
         {/* Notifications */}
         <button className="relative p-2 hover:bg-[#222222] rounded-lg transition-colors">
           <Bell className="w-4 h-4 text-gray-400 hover:text-white" />
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#ff4444] rounded-full flex items-center justify-center">
-            <span className="text-xs text-white font-bold">2</span>
-          </div>
+          {unreadNotifications > 0 && (
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#ff4444] rounded-full flex items-center justify-center">
+              <span className="text-xs text-white font-bold">{unreadNotifications}</span>
+            </div>
+          )}
         </button>
 
         {/* AI Assistant */}
@@ -110,11 +119,19 @@ const Header: React.FC = () => {
         {/* User Profile */}
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-gradient-to-br from-[#00ff88] to-[#00ccff] rounded-full flex items-center justify-center">
-            <User className="w-4 h-4 text-black" />
+            {user?.avatar ? (
+              <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full" />
+            ) : (
+              <User className="w-4 h-4 text-black" />
+            )}
           </div>
           <div className="hidden md:block">
-            <div className="text-sm text-white font-medium">Developer</div>
-            <div className="text-xs text-gray-400">Pro Plan</div>
+            <div className="text-sm text-white font-medium">
+              {user?.name || 'Developer'}
+            </div>
+            <div className="text-xs text-gray-400">
+              {user?.plan ? `${user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan` : 'Free Plan'}
+            </div>
           </div>
         </div>
       </div>

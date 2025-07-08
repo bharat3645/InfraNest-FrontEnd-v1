@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Terminal,
@@ -16,10 +16,12 @@ import {
   Shield,
   Activity
 } from 'lucide-react';
+import { useUIState, useSystemData } from '../lib/store';
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { sidebarCollapsed, setSidebarCollapsed } = useUIState();
+  const { systemStatus } = useSystemData();
   
   const navItems = [
     { 
@@ -61,23 +63,46 @@ const Sidebar: React.FC = () => {
   ];
 
   const quickActions = [
-    { icon: GitBranch, label: 'Git Sync', color: 'text-orange-400' },
-    { icon: Database, label: 'Database', color: 'text-blue-400' },
-    { icon: Globe, label: 'API Docs', color: 'text-green-400' },
-    { icon: Shield, label: 'Security', color: 'text-purple-400' }
+    { icon: GitBranch, label: 'Git Sync', color: 'text-orange-400', action: () => console.log('Git sync') },
+    { icon: Database, label: 'Database', color: 'text-blue-400', action: () => console.log('Database') },
+    { icon: Globe, label: 'API Docs', color: 'text-green-400', action: () => console.log('API docs') },
+    { icon: Shield, label: 'Security', color: 'text-purple-400', action: () => console.log('Security') }
   ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'online':
+      case 'connected':
+      case 'active':
+        return 'text-[#00ff88]';
+      case 'degraded':
+      case 'maintenance':
+        return 'text-[#ffaa00]';
+      case 'offline':
+      case 'disconnected':
+      case 'error':
+      case 'inactive':
+        return 'text-[#ff4444]';
+      default:
+        return 'text-gray-400';
+    }
+  };
   
   return (
     <div className={`bg-[#111111] border-r border-[#333333] flex flex-col transition-all duration-300 ${
-      isCollapsed ? 'w-16' : 'w-64'
+      sidebarCollapsed ? 'w-16' : 'w-64'
     }`}>
       {/* Logo Section */}
       <div className="p-4 border-b border-[#333333]">
         <div className="flex items-center justify-between">
-          {!isCollapsed && (
+          {!sidebarCollapsed && (
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <Terminal className="w-8 h-8 text-[#00ff88]" />
+                <img 
+                  src="/assets/logo.svg" 
+                  alt="InfraNest" 
+                  className="w-8 h-8"
+                />
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#00ff88] rounded-full animate-pulse"></div>
               </div>
               <div>
@@ -89,10 +114,10 @@ const Sidebar: React.FC = () => {
             </div>
           )}
           <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             className="p-1 hover:bg-[#222222] rounded transition-colors"
           >
-            {isCollapsed ? (
+            {sidebarCollapsed ? (
               <ChevronRight className="w-4 h-4 text-gray-400" />
             ) : (
               <ChevronLeft className="w-4 h-4 text-gray-400" />
@@ -119,7 +144,7 @@ const Sidebar: React.FC = () => {
                 }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'text-[#00ff88]' : 'text-gray-400 group-hover:text-white'}`} />
-                {!isCollapsed && (
+                {!sidebarCollapsed && (
                   <div className="ml-3 flex-1">
                     <div className="font-medium">{item.label}</div>
                     <div className="text-xs text-gray-500 group-hover:text-gray-400">
@@ -132,7 +157,7 @@ const Sidebar: React.FC = () => {
                 )}
                 
                 {/* Tooltip for collapsed state */}
-                {isCollapsed && (
+                {sidebarCollapsed && (
                   <div className="absolute left-full ml-2 px-2 py-1 bg-[#222222] text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
                     {item.label}
                   </div>
@@ -143,7 +168,7 @@ const Sidebar: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        {!isCollapsed && (
+        {!sidebarCollapsed && (
           <div className="mt-8">
             <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
               Quick Actions
@@ -154,6 +179,7 @@ const Sidebar: React.FC = () => {
                 return (
                   <button
                     key={index}
+                    onClick={action.action}
                     className="w-full flex items-center px-3 py-2 text-gray-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors"
                   >
                     <Icon className={`w-4 h-4 ${action.color}`} />
@@ -168,22 +194,24 @@ const Sidebar: React.FC = () => {
 
       {/* Status Footer */}
       <div className="p-4 border-t border-[#333333]">
-        {!isCollapsed ? (
+        {!sidebarCollapsed ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Activity className="w-4 h-4 text-[#00ff88]" />
+                <Activity className={`w-4 h-4 ${getStatusColor(systemStatus.api)}`} />
                 <span className="text-sm text-gray-300">System Status</span>
               </div>
-              <div className="w-2 h-2 bg-[#00ff88] rounded-full animate-pulse"></div>
+              <div className={`w-2 h-2 rounded-full ${
+                systemStatus.api === 'online' ? 'bg-[#00ff88] animate-pulse' : 'bg-[#ff4444]'
+              }`}></div>
             </div>
             <div className="text-xs text-gray-500 font-mono">
-              API: Online • DB: Connected
+              API: {systemStatus.api} • DB: {systemStatus.database}
             </div>
           </div>
         ) : (
           <div className="flex justify-center">
-            <Activity className="w-5 h-5 text-[#00ff88]" />
+            <Activity className={`w-5 h-5 ${getStatusColor(systemStatus.api)}`} />
           </div>
         )}
       </div>

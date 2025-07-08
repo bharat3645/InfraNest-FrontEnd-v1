@@ -2,29 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ArrowRight, 
-  Zap, 
   Code2, 
   Rocket, 
-  Shield, 
-  Globe,
   MessageSquare,
   Settings,
   BarChart3,
-  Terminal,
   Play,
-  GitBranch,
   Database,
-  Cloud,
-  Sparkles,
+  TrendingUp,
   ChevronRight,
-  Clock,
-  Users,
-  TrendingUp
+  Sparkles,
+  Activity
 } from 'lucide-react';
+import { useProjectData, useSystemData } from '../lib/store';
 
 const Home: React.FC = () => {
   const [typedText, setTypedText] = useState('');
   const [currentExample, setCurrentExample] = useState(0);
+  const { projects } = useProjectData();
+  const { systemStatus } = useSystemData();
   
   const examples = [
     'Create a blog API with authentication',
@@ -52,18 +48,52 @@ const Home: React.FC = () => {
     return () => clearInterval(timer);
   }, [currentExample]);
 
-  const recentProjects = [
-    { name: 'Blog API', framework: 'Django', status: 'Live', lastModified: '2 hours ago' },
-    { name: 'E-commerce', framework: 'Go Fiber', status: 'Building', lastModified: '1 day ago' },
-    { name: 'Social App', framework: 'Rails', status: 'Draft', lastModified: '3 days ago' }
-  ];
+  // Calculate real stats from projects
+  const stats = {
+    totalProjects: projects.length,
+    activeDeployments: projects.filter(p => p.status === 'deployed').length,
+    generatedProjects: projects.filter(p => p.status === 'generated').length,
+    systemUptime: '99.9%' // This would come from real monitoring
+  };
 
   const quickStats = [
-    { label: 'APIs Generated', value: '12', icon: Database, color: 'text-blue-400' },
-    { label: 'Deployments', value: '8', icon: Rocket, color: 'text-green-400' },
-    { label: 'Active Projects', value: '5', icon: Code2, color: 'text-purple-400' },
-    { label: 'Uptime', value: '99.9%', icon: TrendingUp, color: 'text-orange-400' }
+    { label: 'Total Projects', value: stats.totalProjects.toString(), icon: Database, color: 'text-blue-400' },
+    { label: 'Active Deployments', value: stats.activeDeployments.toString(), icon: Rocket, color: 'text-green-400' },
+    { label: 'Generated', value: stats.generatedProjects.toString(), icon: Code2, color: 'text-purple-400' },
+    { label: 'Uptime', value: stats.systemUptime, icon: TrendingUp, color: 'text-orange-400' }
   ];
+
+  // Get recent projects (last 3)
+  const recentProjects = projects.slice(0, 3);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'deployed':
+        return 'bg-green-400/20 text-green-400';
+      case 'building':
+        return 'bg-yellow-400/20 text-yellow-400';
+      case 'generated':
+        return 'bg-blue-400/20 text-blue-400';
+      case 'error':
+        return 'bg-red-400/20 text-red-400';
+      default:
+        return 'bg-gray-400/20 text-gray-400';
+    }
+  };
+
+  const getSystemStatusColor = (status: string) => {
+    switch (status) {
+      case 'online':
+      case 'connected':
+      case 'active':
+        return 'text-[#00ff88]';
+      case 'degraded':
+      case 'maintenance':
+        return 'text-[#ffaa00]';
+      default:
+        return 'text-[#ff4444]';
+    }
+  };
 
   return (
     <div className="h-full bg-[#0a0a0a] text-white overflow-auto">
@@ -168,29 +198,41 @@ const Home: React.FC = () => {
               </Link>
             </div>
             <div className="space-y-4">
-              {recentProjects.map((project, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-lg hover:bg-[#222222] transition-colors cursor-pointer">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#00ff88] to-[#00ccff] rounded-lg flex items-center justify-center">
-                      <Code2 className="w-5 h-5 text-black" />
+              {recentProjects.length > 0 ? (
+                recentProjects.map((project, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-lg hover:bg-[#222222] transition-colors cursor-pointer">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-[#00ff88] to-[#00ccff] rounded-lg flex items-center justify-center">
+                        <Code2 className="w-5 h-5 text-black" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-white">{project.name}</div>
+                        <div className="text-sm text-gray-400">{project.framework}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium text-white">{project.name}</div>
-                      <div className="text-sm text-gray-400">{project.framework}</div>
+                    <div className="text-right">
+                      <div className={`text-sm px-2 py-1 rounded ${getStatusColor(project.status)}`}>
+                        {project.status}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(project.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`text-sm px-2 py-1 rounded ${
-                      project.status === 'Live' ? 'bg-green-400/20 text-green-400' :
-                      project.status === 'Building' ? 'bg-yellow-400/20 text-yellow-400' :
-                      'bg-gray-400/20 text-gray-400'
-                    }`}>
-                      {project.status}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">{project.lastModified}</div>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <Code2 className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-400">No projects yet. Start by creating your first backend!</p>
+                  <Link
+                    to="/prompt"
+                    className="inline-flex items-center mt-4 px-4 py-2 bg-[#00ff88] text-black rounded-lg hover:bg-[#00ccff] transition-colors"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Create Project
+                  </Link>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -238,22 +280,34 @@ const Home: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-gray-300">API Gateway</span>
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-[#00ff88] rounded-full"></div>
-                    <span className="text-[#00ff88] text-sm">Online</span>
+                    <div className={`w-2 h-2 rounded-full ${
+                      systemStatus.api === 'online' ? 'bg-[#00ff88]' : 'bg-[#ff4444]'
+                    }`}></div>
+                    <span className={`text-sm ${getSystemStatusColor(systemStatus.api)}`}>
+                      {systemStatus.api}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-300">Database</span>
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-[#00ff88] rounded-full"></div>
-                    <span className="text-[#00ff88] text-sm">Connected</span>
+                    <div className={`w-2 h-2 rounded-full ${
+                      systemStatus.database === 'connected' ? 'bg-[#00ff88]' : 'bg-[#ff4444]'
+                    }`}></div>
+                    <span className={`text-sm ${getSystemStatusColor(systemStatus.database)}`}>
+                      {systemStatus.database}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-300">AI Engine</span>
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-[#00ff88] rounded-full animate-pulse"></div>
-                    <span className="text-[#00ff88] text-sm">Active</span>
+                    <div className={`w-2 h-2 rounded-full ${
+                      systemStatus.aiEngine === 'active' ? 'bg-[#00ff88] animate-pulse' : 'bg-[#ff4444]'
+                    }`}></div>
+                    <span className={`text-sm ${getSystemStatusColor(systemStatus.aiEngine)}`}>
+                      {systemStatus.aiEngine}
+                    </span>
                   </div>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   FileText, 
   Folder, 
@@ -9,7 +9,7 @@ import {
   Eye,
   Code
 } from 'lucide-react';
-import { useProjectStore } from '../lib/store';
+import { useProjectData } from '../lib/store';
 
 interface FileTreeProps {
   files: Record<string, string>;
@@ -63,16 +63,16 @@ const FileTree: React.FC<FileTreeProps> = ({ files, onFileSelect, selectedFile }
         return (
           <div key={fullPath}>
             <div
-              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-slate-700/50 rounded transition-colors`}
+              className={`flex items-center space-x-2 p-2 cursor-pointer hover:bg-[#1a1a1a] rounded transition-colors`}
               style={{ paddingLeft: `${level * 16 + 8}px` }}
               onClick={() => toggleFolder(fullPath)}
             >
               {isExpanded ? (
-                <FolderOpen className="w-4 h-4 text-blue-400" />
+                <FolderOpen className="w-4 h-4 text-[#00ccff]" />
               ) : (
-                <Folder className="w-4 h-4 text-blue-400" />
+                <Folder className="w-4 h-4 text-[#00ccff]" />
               )}
-              <span className="text-sm text-slate-300">{name}</span>
+              <span className="text-sm text-gray-300">{name}</span>
             </div>
             {isExpanded && (
               <div>
@@ -87,13 +87,13 @@ const FileTree: React.FC<FileTreeProps> = ({ files, onFileSelect, selectedFile }
             key={fullPath}
             className={`flex items-center space-x-2 p-2 cursor-pointer rounded transition-colors ${
               selectedFile === node.path
-                ? 'bg-blue-600/20 text-blue-300'
-                : 'text-slate-300 hover:bg-slate-700/50'
+                ? 'bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/20'
+                : 'text-gray-300 hover:bg-[#1a1a1a]'
             }`}
             style={{ paddingLeft: `${level * 16 + 8}px` }}
             onClick={() => onFileSelect(node.path)}
           >
-            <FileText className="w-4 h-4 text-slate-400" />
+            <FileText className="w-4 h-4 text-gray-400" />
             <span className="text-sm">{name}</span>
           </div>
         );
@@ -116,7 +116,7 @@ interface CodeEditorProps {
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({ files, className = '' }) => {
-  const { activeFile, setActiveFile } = useProjectStore();
+  const { activeFile, setActiveFile } = useProjectData();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -145,13 +145,13 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ files, className = '' }) => {
   return (
     <div className={`grid grid-cols-1 lg:grid-cols-4 gap-6 ${className}`}>
       {/* File Explorer */}
-      <div className="bg-slate-800/50 backdrop-blur-sm p-4 rounded-xl border border-slate-700/50">
+      <div className="bg-[#111111] border border-[#333333] p-4 rounded-lg">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <Folder className="w-5 h-5 text-blue-400" />
+            <Folder className="w-5 h-5 text-[#00ccff]" />
             <h3 className="font-semibold text-white">Project Files</h3>
           </div>
-          <span className="text-xs text-slate-400">{Object.keys(files).length} files</span>
+          <span className="text-xs text-gray-400">{Object.keys(files).length} files</span>
         </div>
         <FileTree 
           files={files} 
@@ -161,15 +161,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ files, className = '' }) => {
       </div>
 
       {/* Code Viewer */}
-      <div className="lg:col-span-3 bg-slate-800/50 backdrop-blur-sm p-4 rounded-xl border border-slate-700/50">
+      <div className="lg:col-span-3 bg-[#111111] border border-[#333333] p-4 rounded-lg">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <Code className="w-5 h-5 text-blue-400" />
+            <Code className="w-5 h-5 text-[#00ccff]" />
             <h3 className="font-semibold text-white">
               {activeFile || 'Select a file'}
             </h3>
             {activeFile && (
-              <span className="px-2 py-1 bg-slate-600/50 text-xs rounded text-slate-300">
+              <span className="px-2 py-1 bg-[#333333] text-xs rounded text-gray-300">
                 {getLanguage(activeFile)}
               </span>
             )}
@@ -178,11 +178,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ files, className = '' }) => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleCopy}
-                className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                className="p-2 bg-[#1a1a1a] border border-[#333333] hover:bg-[#222222] text-white rounded-lg transition-colors"
                 title="Copy to clipboard"
               >
                 {copied ? (
-                  <Check className="w-4 h-4 text-green-400" />
+                  <Check className="w-4 h-4 text-[#00ff88]" />
                 ) : (
                   <Copy className="w-4 h-4" />
                 )}
@@ -191,15 +191,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ files, className = '' }) => {
           )}
         </div>
         
-        <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700 h-96 overflow-auto">
+        <div className="bg-[#0f0f0f] border border-[#222222] p-4 rounded-lg h-96 overflow-auto">
           {activeFile && files[activeFile] ? (
             <pre className="text-sm">
-              <code className={`language-${getLanguage(activeFile)} text-green-400`}>
+              <code className={`language-${getLanguage(activeFile)} text-[#00ff88] font-mono`}>
                 {files[activeFile]}
               </code>
             </pre>
           ) : (
-            <div className="flex items-center justify-center h-full text-slate-500">
+            <div className="flex items-center justify-center h-full text-gray-500">
               <div className="text-center">
                 <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p>Select a file to view its content</p>
