@@ -9,6 +9,7 @@ import DSLBuilder from './pages/DSLBuilder';
 import CodeGenerator from './pages/CodeGenerator';
 import Deploy from './pages/Deploy';
 import Dashboard from './pages/Dashboard';
+import Footer from './components/Footer';
 import './App.css';
 
 function App() {
@@ -25,7 +26,8 @@ function App() {
           
           {/* Main Content */}
           <main className="flex-1 overflow-auto">
-            <div className="h-full">
+            <div className="min-h-full flex flex-col">
+              <div className="flex-1">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/prompt" element={<PromptToDSL />} />
@@ -34,6 +36,9 @@ function App() {
                 <Route path="/deploy" element={<Deploy />} />
                 <Route path="/dashboard" element={<Dashboard />} />
               </Routes>
+              
+              {/* Footer */}
+              <Footer />
             </div>
           </main>
         </div>
